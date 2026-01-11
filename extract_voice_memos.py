@@ -50,9 +50,11 @@ def extract_voice_memos(output_dir: str) -> None:
         print(f"Found {len(folders)} folders: {', '.join(folders.values())}")
 
     # Get metadata: path, label, date, and folder
+    # Skip Recently Deleted items and empty/ghost recordings
     cursor.execute("""
         SELECT ZPATH, ZCUSTOMLABELFORSORTING, ZDATE, ZFOLDER
         FROM ZCLOUDRECORDING
+        WHERE ZEVICTIONDATE IS NULL AND ZPATH IS NOT NULL AND ZPATH != ''
     """)
 
     rows = cursor.fetchall()
@@ -60,9 +62,6 @@ def extract_voice_memos(output_dir: str) -> None:
 
     extracted = 0
     for path, label, zdate, folder_id in rows:
-        if not path:
-            continue
-
         source = os.path.join(VOICE_MEMOS_PATH, path)
 
         if os.path.exists(source):
